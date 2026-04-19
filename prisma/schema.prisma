@@ -1,0 +1,228 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  RESERVED
+  SOLD
+  ARCHIVED
+}
+
+enum PropertyType {
+  LAND
+  APARTMENT
+  HOUSE
+  VILLA
+  COMMERCIAL
+  OFFICE
+  SHOP
+  FARM
+  OTHER
+}
+
+enum CustomerCategory {
+  BUYER
+  SELLER
+  INVESTOR
+  TENANT
+  LANDLORD
+  OTHER
+}
+
+enum CustomerStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  VISIT_PLANNED
+  NEGOTIATION
+  CLOSED
+  LOST
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityEntityType {
+  USER
+  LISTING
+  CUSTOMER
+  TASK
+  SHOWING
+  SALE
+  SYSTEM
+}
+
+enum ActivityActionType {
+  LOGIN
+  USER_CREATED
+  USER_UPDATED
+  USER_DEACTIVATED
+  LISTING_CREATED
+  LISTING_UPDATED
+  LISTING_STATUS_CHANGED
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  CUSTOMER_STATUS_CHANGED
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_STATUS_CHANGED
+  SHOWING_CREATED
+  SHOWING_UPDATED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  fullName      String
+  email         String    @unique
+  passwordHash  String
+  role          UserRole  @default(AGENT)
+  phone         String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  
+  // Relationships
+  assignedListings  Listing[]  @relation("AssignedAgent")
+  createdListings   Listing[]  @relation("CreatedBy")
+  assignedCustomers Customer[] @relation("AssignedAgent")
+  createdCustomers  Customer[] @relation("CreatedBy")
+  assignedTasks     Task[]     @relation("AssignedTo")
+  createdTasks      Task[]     @relation("CreatedBy")
+  activityLogs      ActivityLog[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Listing {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?       @db.Text
+  propertyType  PropertyType
+  status        ListingStatus @default(DRAFT)
+  price         Decimal       @db.Decimal(12, 2)
+  areaSizeM2    Decimal?      @db.Decimal(10, 2)
+  roomCount     Int?
+  bathroomCount Int?
+  buildingAge   Int?
+  
+  // Location
+  city          String?
+  district      String?
+  neighborhood  String?
+  addressText   String?       @db.Text
+  islandNo      String?
+  parcelNo      String?
+  latitude      Float?
+  longitude     Float?
+  
+  // Ownership
+  assignedAgentId String?
+  assignedAgent   User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  createdById     String
+  createdBy       User     @relation("CreatedBy", fields: [createdById], references: [id])
+  
+  // Relationships
+  photos ListingPhoto[]
+  tasks  Task[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ListingPhoto {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id                    String           @id @default(cuid())
+  fullName              String
+  phone                 String
+  email                 String?
+  category              CustomerCategory @default(BUYER)
+  desiredPropertyType   PropertyType?
+  budgetMin             Decimal?         @db.Decimal(12, 2)
+  budgetMax             Decimal?         @db.Decimal(12, 2)
+  preferredCity         String?
+  preferredDistrict     String?
+  notes                 String?          @db.Text
+  status                CustomerStatus   @default(NEW)
+  
+  // Ownership
+  assignedAgentId String?
+  assignedAgent   User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  createdById     String
+  createdBy       User     @relation("CreatedBy", fields: [createdById], references: [id])
+  
+  // Relationships
+  tasks Task[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?      @db.Text
+  dueDate     DateTime?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
+  
+  // Assignment
+  assignedToId String
+  assignedTo   User   @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdById  String
+  createdBy    User   @relation("CreatedBy", fields: [createdById], references: [id])
+  
+  // Context
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id           String             @id @default(cuid())
+  actorUserId  String?
+  actor        User?              @relation(fields: [actorUserId], references: [id])
+  actionType   ActivityActionType
+  entityType   ActivityEntityType
+  entityId     String?
+  summary      String
+  metadataJson Json?
+  createdAt    DateTime           @default(now())
+}
