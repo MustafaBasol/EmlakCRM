@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Emlak CRM - Modern Emlak Ofisi Yönetim Sistemi
 
-## Getting Started
+Bu proje, emlak ofisleri için geliştirilmiş, modern, hızlı ve kullanıcı dostu bir CRM (Müşteri İlişkileri Yönetimi) sistemidir. Next.js 15, Prisma ve Tailwind CSS v4 teknolojileri ile inşa edilmiştir.
 
-First, run the development server:
+## 🚀 Özellikler
 
+- **Gelişmiş Dashboard**: Ofis metrikleri, yaklaşan görevler ve son aktivitelerin canlı özeti.
+- **Portföy Yönetimi**: Gayrimenkul ilanlarının oluşturulması, düzenlenmesi ve filtrelenmesi.
+- **CRM / Müşteri Yönetimi**: Alıcı, satıcı ve yatırımcı leadlerinin takibi, bütçe ve tercih yönetimi.
+- **Görev & Ajanda**: Randevular, yer göstermeler ve hatırlatıcıların yönetimi.
+- **Kimlik Doğrulama & Yetkilendirme**: Role-based access control (Admin/Agent) ve güvenli giriş sistemi.
+- **Denetim Kaydı (Audit Log)**: Sistem üzerindeki tüm işlemlerin yöneticiler tarafından takibi.
+- **Mobil Uyumlu**: Tamamen responsive tasarım ve mobil navigasyon desteği.
+
+## 🛠️ Teknoloji Yığını
+
+- **Framework**: Next.js 15 (App Router)
+- **Veritabanı**: PostgreSQL & Prisma ORM
+- **Kimlik Doğrulama**: Auth.js (NextAuth)
+- **Styling**: Tailwind CSS v4 & shadcn/ui
+- **Form Yönetimi**: React Hook Form & Zod
+- **Diller**: TypeScript
+
+## 📦 Kurulum ve Çalıştırma
+
+### 1. Gereksinimler
+- Node.js 18+ 
+- PostgreSQL veritabanı
+
+### 2. Kurulum
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Veritabanı Yapılandırması
+`.env.example` dosyasını `.env` olarak kopyalayın ve veritabanı bağlantı dizginizi (`DATABASE_URL`) ekleyin.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx prisma migrate dev --name init
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Demo Verilerini Yükleme
+Sistemi test etmek için hazır verileri yükleyebilirsiniz:
+```bash
+npx prisma db seed
+```
 
-## Learn More
+### 5. Uygulamayı Başlatma
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🔐 Test Kullanıcıları
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Rol | E-posta | Şifre |
+| :--- | :--- | :--- |
+| **Yönetici (Admin)** | admin@emlak.com | admin123 |
+| **Danışman (Agent)** | mehmet@emlak.com | agent123 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Geliştiren: Antigravity AI Assistant*
