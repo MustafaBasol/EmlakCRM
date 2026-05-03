@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Clipboard, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -46,10 +46,50 @@ function ContentBlock({
 }
 
 export function AiContentGenerator({ propertyId, onApplyDescription }: AiContentGeneratorProps) {
+  const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState<AiGeneratedContent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<CopyKey | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSavedContent() {
+      setInitializing(true);
+
+      try {
+        const response = await fetch(`/api/properties/${propertyId}/save-ai-content`, {
+          method: "GET",
+          cache: "no-store",
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Kaydedilen AI içeriği yüklenemedi.");
+        }
+
+        if (active && data.content) {
+          setContent(data.content);
+        }
+      } catch (err) {
+        if (active) {
+          const message = err instanceof Error ? err.message : "Kaydedilen AI içeriği yüklenemedi.";
+          setError(message);
+        }
+      } finally {
+        if (active) {
+          setInitializing(false);
+        }
+      }
+    }
+
+    loadSavedContent();
+
+    return () => {
+      active = false;
+    };
+  }, [propertyId]);
 
   async function handleGenerate() {
     setLoading(true);
@@ -68,7 +108,11 @@ export function AiContentGenerator({ propertyId, onApplyDescription }: AiContent
       }
 
       setContent(data.content);
-      toast.success("AI içerik üretildi.");
+      if (data.saveError) {
+        toast.warning(data.saveError);
+      } else {
+        toast.success("AI içerik üretildi ve kaydedildi.");
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "AI içerik üretilemedi.";
       setError(message);
@@ -101,6 +145,12 @@ export function AiContentGenerator({ propertyId, onApplyDescription }: AiContent
       <CardContent className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+
+        {initializing && !loading && (
+          <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-sm text-[#475569]">
+            Kaydedilen içerik yükleniyor...
+          </div>
         )}
 
         {loading && (

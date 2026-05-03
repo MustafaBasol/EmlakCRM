@@ -176,6 +176,35 @@ export async function generateRealEstateContent(listing: ListingForAi) {
   } satisfies AiProviderResult;
 }
 
+export async function getLatestAiGeneratedContent(propertyId: string) {
+  const saved = await prisma.aiGeneratedContent.findFirst({
+    where: { propertyId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!saved) return null;
+
+  return {
+    id: saved.id,
+    provider: saved.provider,
+    model: saved.model,
+    createdAt: saved.createdAt,
+    content: {
+      longDescription: saved.longDescription,
+      shortDescription: saved.shortDescription,
+      instagramPost: saved.instagramPost,
+      facebookPost: saved.facebookPost,
+      linkedinPost: saved.linkedinPost,
+      whatsappMessage: saved.whatsappMessage,
+      storyTexts: saved.storyTexts,
+      seoTitle: saved.seoTitle,
+      metaDescription: saved.metaDescription,
+      hashtags: saved.hashtags,
+      alternativeTitles: saved.alternativeTitles,
+    },
+  };
+}
+
 export async function saveAiGeneratedContent(propertyId: string, provider: string, model: string, content: AiGeneratedContent) {
   return prisma.aiGeneratedContent.create({
     data: {

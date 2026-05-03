@@ -3,12 +3,44 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth/auth-options";
 import { aiGeneratedContentSchema } from "@/lib/services/ai/ai-content-types";
 import {
+  getLatestAiGeneratedContent,
   getAuthorizedListingForAi,
   saveAiGeneratedContent,
 } from "@/lib/services/ai/real-estate-content-generator-service";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
+}
+
+export async function GET(_request: Request, ctx: RouteParams) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
+  }
+
+  const { id } = await ctx.params;
+  const user = session.user as { id: string; role: "ADMIN" | "AGENT" };
+
+  try {
+    const listing = await getAuthorizedListingForAi(id, user.role, user.id);
+    if (!listing) {
+      return NextResponse.json({ error: "İlan bulunamadı." }, { status: 404 });
+    }
+
+    const saved = await getLatestAiGeneratedContent(id);
+    if (!saved) {
+      return NextResponse.json({ content: null });
+    }
+
+    return NextResponse.json({
+      ...saved,
+      content: aiGeneratedContentSchema.parse(saved.content),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "AI içerik yüklenemedi.";
+    const status = message.includes("yetkiniz") ? 403 : 400;
+    return NextResponse.json({ error: message }, { status });
+  }
 }
 
 export async function POST(request: Request, ctx: RouteParams) {

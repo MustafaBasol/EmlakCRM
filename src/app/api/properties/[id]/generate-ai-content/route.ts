@@ -56,6 +56,7 @@ export async function POST(request: Request, ctx: RouteParams) {
     const shouldSave = body?.save === true;
     const result = await generateRealEstateContent(listing);
     let savedContentId: string | null = null;
+    let saveErrorMessage: string | null = null;
 
     if (shouldSave) {
       try {
@@ -63,6 +64,7 @@ export async function POST(request: Request, ctx: RouteParams) {
         savedContentId = saved.id;
       } catch (saveError) {
         console.error("AI content generated but could not be saved:", saveError);
+        saveErrorMessage = "İçerik üretildi ancak veritabanına kaydedilemedi.";
       }
     }
 
@@ -71,6 +73,7 @@ export async function POST(request: Request, ctx: RouteParams) {
       provider: result.provider,
       model: result.model,
       savedContentId,
+      saveError: saveErrorMessage,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI içerik üretilemedi.";
