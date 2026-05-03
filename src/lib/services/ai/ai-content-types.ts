@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+function normalizeStringArray(value: unknown, length: number) {
+  const items = Array.isArray(value) ? value : [];
+  return Array.from({ length }, (_, index) => {
+    const item = items[index];
+    return typeof item === "string" ? item : item == null ? "" : String(item);
+  });
+}
+
 export const aiGeneratedContentSchema = z.object({
   longDescription: z.string().default(""),
   shortDescription: z.string().default(""),
@@ -7,27 +15,11 @@ export const aiGeneratedContentSchema = z.object({
   facebookPost: z.string().default(""),
   linkedinPost: z.string().default(""),
   whatsappMessage: z.string().default(""),
-  storyTexts: z.array(z.string()).length(5).default(["", "", "", "", ""]),
+  storyTexts: z.preprocess((value) => normalizeStringArray(value, 5), z.array(z.string()).length(5)),
   seoTitle: z.string().default(""),
   metaDescription: z.string().default(""),
-  hashtags: z.array(z.string()).length(15).default([
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-  ]),
-  alternativeTitles: z.array(z.string()).length(3).default(["", "", ""]),
+  hashtags: z.preprocess((value) => normalizeStringArray(value, 15), z.array(z.string()).length(15)),
+  alternativeTitles: z.preprocess((value) => normalizeStringArray(value, 3), z.array(z.string()).length(3)),
 });
 
 export type AiGeneratedContent = z.infer<typeof aiGeneratedContentSchema>;
@@ -38,4 +30,3 @@ export interface AiProviderResult {
   provider: string;
   model: string;
 }
-
