@@ -34,7 +34,7 @@ export function TableRowActions({ actions }: TableRowActionsProps) {
   const inlineActions = actions.filter((a) => !a.isMobileOnly);
 
   return (
-    <div className="flex items-center justify-end">
+    <div className="flex items-center justify-end" onClick={(event) => event.stopPropagation()}>
       {/* Desktop Inline Actions */}
       <div className="hidden md:flex items-center gap-1 mr-1">
         <TooltipProvider delayDuration={300}>
@@ -46,7 +46,10 @@ export function TableRowActions({ actions }: TableRowActionsProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={action.onClick}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  action.onClick?.();
+                }}
                 className={cn(
                   "h-8 w-8 transition-colors text-slate-500 hover:text-slate-900",
                   action.isDestructive && "hover:bg-rose-50 hover:text-rose-600 focus:ring-rose-200"
@@ -62,7 +65,7 @@ export function TableRowActions({ actions }: TableRowActionsProps) {
                 <TooltipTrigger asChild>
                   {/* Tooltip trigger requires standard wrapper if link */}
                   {action.href ? (
-                    <Link href={action.href} passHref>
+                    <Link href={action.href} passHref onClick={(event) => event.stopPropagation()}>
                       {buttonContent}
                     </Link>
                   ) : (
@@ -81,7 +84,10 @@ export function TableRowActions({ actions }: TableRowActionsProps) {
       {/* Mobile Or Overflow Dropdown Menu */}
       <div className="flex md:hidden">
         <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-slate-100 h-8 w-8 text-[#475569]">
+          <DropdownMenuTrigger
+            onClick={(event) => event.stopPropagation()}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-slate-100 h-8 w-8 text-[#475569]"
+          >
             <MoreHorizontal className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -92,7 +98,8 @@ export function TableRowActions({ actions }: TableRowActionsProps) {
                 return (
                   <DropdownMenuItem 
                     key={index} 
-                    render={<Link href={action.href} />}
+                    onClick={(event) => event.stopPropagation()}
+                    render={<Link href={action.href} onClick={(event) => event.stopPropagation()} />}
                     className={cn(action.isDestructive && "text-destructive font-medium focus:text-destructive")}
                   >
                     <Icon className="mr-2 h-4 w-4" /> {action.label}
@@ -103,7 +110,10 @@ export function TableRowActions({ actions }: TableRowActionsProps) {
               return (
                 <DropdownMenuItem 
                   key={index} 
-                  onClick={action.onClick}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    action.onClick?.();
+                  }}
                   className={cn(action.isDestructive && "text-destructive font-medium focus:text-destructive cursor-pointer")}
                 >
                   <Icon className="mr-2 h-4 w-4" /> {action.label}

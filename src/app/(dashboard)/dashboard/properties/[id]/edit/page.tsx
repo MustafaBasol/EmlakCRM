@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth/auth-options";
 import { getListingById } from "@/lib/queries/listings/get-listings";
 import { ListingForm } from "@/components/listings/listing-form";
 import { UserRole } from "@prisma/client";
+import prisma from "@/lib/db/db";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -18,6 +19,18 @@ export default async function EditListingPage({ params }: PageProps) {
 
   const listing = await getListingById(id, user.role, user.id);
   if (!listing) return notFound();
+  const agents =
+    user.role === UserRole.ADMIN
+      ? await prisma.user.findMany({
+          where: { role: UserRole.AGENT, isActive: true },
+          orderBy: { fullName: "asc" },
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        })
+      : [];
 
   return (
     <div className="space-y-6">
@@ -31,6 +44,7 @@ export default async function EditListingPage({ params }: PageProps) {
       <ListingForm 
         initialData={listing} 
         isAdmin={user.role === UserRole.ADMIN} 
+        agents={agents}
       />
     </div>
   );

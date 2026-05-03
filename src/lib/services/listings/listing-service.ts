@@ -3,14 +3,21 @@ import prisma from "@/lib/db/db";
 import { ListingInput } from "@/lib/validations/listing";
 import { logActivity } from "@/lib/services/activity/log-service";
 
-export async function createListing(data: ListingInput, createdById: string) {
+export async function createListing(data: ListingInput, createdById: string, photoUrls: string[] = []) {
   try {
     const listing = await prisma.listing.create({
       data: {
         ...data,
         createdById,
-        // If no assigned agent, default to creator
         assignedAgentId: data.assignedAgentId || createdById,
+        ...(photoUrls.length > 0 && {
+          photos: {
+            create: photoUrls.map((imageUrl, index) => ({
+              imageUrl,
+              sortOrder: index,
+            })),
+          },
+        }),
       },
     });
 
@@ -20,7 +27,7 @@ export async function createListing(data: ListingInput, createdById: string) {
       entityType: ActivityEntityType.LISTING,
       entityId: listing.id,
       summary: `Yeni portföy oluşturuldu: ${listing.title}`,
-      metadataJson: { title: listing.title, price: listing.price },
+      metadataJson: { title: listing.title, price: listing.price, photoCount: photoUrls.length },
     });
 
     return listing;
@@ -30,11 +37,33 @@ export async function createListing(data: ListingInput, createdById: string) {
   }
 }
 
-export async function updateListing(id: string, data: Partial<ListingInput>, actorUserId: string) {
+export async function updateListing(
+  id: string,
+  data: Partial<ListingInput>,
+  actorUserId: string,
+  photoUrls: string[] = []
+) {
   try {
+    const existingPhotoCount = await prisma.listingPhoto.count({
+      where: { listingId: id },
+    });
+
     const listing = await prisma.listing.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        ...(Object.prototype.hasOwnProperty.call(data, "assignedAgentId") && {
+          assignedAgentId: data.assignedAgentId || null,
+        }),
+        ...(photoUrls.length > 0 && {
+          photos: {
+            create: photoUrls.map((imageUrl, index) => ({
+              imageUrl,
+              sortOrder: existingPhotoCount + index,
+            })),
+          },
+        }),
+      },
     });
 
     await logActivity({
@@ -43,7 +72,10 @@ export async function updateListing(id: string, data: Partial<ListingInput>, act
       entityType: ActivityEntityType.LISTING,
       entityId: listing.id,
       summary: `Portföy güncellendi: ${listing.title}`,
-      metadataJson: { changedFields: Object.keys(data) },
+      metadataJson: {
+        changedFields: Object.keys(data),
+        addedPhotoCount: photoUrls.length,
+      },
     });
 
     return listing;
@@ -61,7 +93,7 @@ export async function deleteListing(id: string, actorUserId: string) {
 
     await logActivity({
       actorUserId,
-      actionType: ActivityActionType.LISTING_UPDATED, // We could add LISTING_DELETED to enum if needed
+      actionType: ActivityActionType.LISTING_UPDATED,
       entityType: ActivityEntityType.LISTING,
       entityId: listing.id,
       summary: `Portföy silindi: ${listing.title}`,

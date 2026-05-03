@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth-options";
 import { getTaskById } from "@/lib/queries/tasks/get-tasks";
 import { TaskForm } from "@/components/tasks/task-form";
+import { getCustomers } from "@/lib/queries/customers/get-customers";
+import { getListings } from "@/lib/queries/listings/get-listings";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -15,7 +17,11 @@ export default async function EditTaskPage({ params }: PageProps) {
   const { id } = await params;
   const user = session.user as any;
 
-  const task = await getTaskById(id, user.role, user.id);
+  const [task, customers, listings] = await Promise.all([
+    getTaskById(id, user.role, user.id),
+    getCustomers({ role: user.role, userId: user.id }),
+    getListings({ role: user.role, userId: user.id }),
+  ]);
   if (!task) return notFound();
 
   return (
@@ -29,7 +35,15 @@ export default async function EditTaskPage({ params }: PageProps) {
 
       <TaskForm 
         initialData={task} 
-        currentUserId={user.id} 
+        currentUserId={user.id}
+        customers={customers.map((customer) => ({
+          id: customer.id,
+          fullName: customer.fullName,
+        }))}
+        listings={listings.map((listing) => ({
+          id: listing.id,
+          title: listing.title,
+        }))}
       />
     </div>
   );

@@ -2,39 +2,60 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { CustomerCategory, CustomerStatus } from "@prisma/client";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { CustomerCategory, CustomerStatus } from "@prisma/client";
+import {
+  customerCategoryLabels,
+  customerStatusLabels,
+} from "@/lib/constants/enum-labels";
 
 export function CustomerFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchValue = searchParams.get("search") ?? "";
+  const statusValue = searchParams.get("status") ?? "all";
+  const categoryValue = searchParams.get("category") ?? "all";
+
+  const statusItems = Object.values(CustomerStatus).map((status) => ({
+    value: status,
+    label: customerStatusLabels[status],
+  }));
+
+  const categoryItems = Object.values(CustomerCategory).map((category) => ({
+    value: category,
+    label: customerCategoryLabels[category],
+  }));
 
   const handleSearch = (term: string) => {
     const params = new URLSearchParams(searchParams);
+
     if (term) {
       params.set("search", term);
     } else {
       params.delete("search");
     }
+
     router.replace(`${pathname}?${params.toString()}`);
   };
 
   const handleFilterChange = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams);
+
     if (value && value !== "all") {
       params.set(key, value);
     } else {
       params.delete(key);
     }
+
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -49,38 +70,50 @@ export function CustomerFilters() {
         <Input
           placeholder="Müşteri ara (ad, telefon, e-posta...)"
           className="pl-9"
-          defaultValue={searchParams.get("search")?.toString()}
-          onChange={(e) => handleSearch(e.target.value)}
+          value={searchValue}
+          onChange={(event) => handleSearch(event.target.value)}
         />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select
-          defaultValue={searchParams.get("status")?.toString() || "all"}
-          onValueChange={(v) => handleFilterChange("status", v)}
+          items={[
+            { value: "all", label: "Durum: Tümü" },
+            ...statusItems,
+          ]}
+          value={statusValue}
+          onValueChange={(value) => handleFilterChange("status", value)}
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Durum: Tümü</SelectItem>
-            {Object.values(CustomerStatus).map((status) => (
-              <SelectItem key={status} value={status}>{status}</SelectItem>
+            {statusItems.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         <Select
-          defaultValue={searchParams.get("category")?.toString() || "all"}
-          onValueChange={(v) => handleFilterChange("category", v)}
+          items={[
+            { value: "all", label: "Kategori: Tümü" },
+            ...categoryItems,
+          ]}
+          value={categoryValue}
+          onValueChange={(value) => handleFilterChange("category", value)}
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Kategori" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Kategori: Tümü</SelectItem>
-            {Object.values(CustomerCategory).map((cat) => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            {categoryItems.map((category) => (
+              <SelectItem key={category.value} value={category.value}>
+                {category.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

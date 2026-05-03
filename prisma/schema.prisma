@@ -148,11 +148,36 @@ model Listing {
   createdBy       User     @relation("CreatedBy", fields: [createdById], references: [id])
   
   // Relationships
-  photos ListingPhoto[]
-  tasks  Task[]
+  photos              ListingPhoto[]
+  tasks               Task[]
+  aiGeneratedContents AiGeneratedContent[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AiGeneratedContent {
+  id                String   @id @default(cuid())
+  propertyId        String
+  property          Listing  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  provider          String
+  model             String
+  longDescription   String   @db.Text
+  shortDescription  String   @db.Text
+  instagramPost     String   @db.Text
+  facebookPost      String   @db.Text
+  linkedinPost      String   @db.Text
+  whatsappMessage   String   @db.Text
+  storyTexts        Json
+  seoTitle          String
+  metaDescription   String   @db.Text
+  hashtags          Json
+  alternativeTitles Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([propertyId])
+  @@map("ai_generated_contents")
 }
 
 model ListingPhoto {

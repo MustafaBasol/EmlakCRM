@@ -29,6 +29,11 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import {
+  customerCategoryLabels,
+  customerStatusLabels,
+  propertyTypeLabels,
+} from "@/lib/constants/enum-labels";
 
 interface CustomerFormProps {
   initialData?: any;
@@ -39,6 +44,18 @@ export function CustomerForm({ initialData, isAdmin }: CustomerFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   type CustomerFormValues = z.input<typeof customerSchema>;
+  const categoryItems = Object.values(CustomerCategory).map((category) => ({
+    value: category,
+    label: customerCategoryLabels[category],
+  }));
+  const statusItems = Object.values(CustomerStatus).map((status) => ({
+    value: status,
+    label: customerStatusLabels[status],
+  }));
+  const propertyTypeItems = Object.values(PropertyType).map((type) => ({
+    value: type,
+    label: propertyTypeLabels[type],
+  }));
 
   const form = useForm<CustomerFormValues, unknown, CustomerInput>({
     resolver: zodResolver(customerSchema),
@@ -141,15 +158,15 @@ export function CustomerForm({ initialData, isAdmin }: CustomerFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kategori</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select items={categoryItems} value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Seçiniz" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.values(CustomerCategory).map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          {categoryItems.map((category) => (
+                            <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -163,15 +180,15 @@ export function CustomerForm({ initialData, isAdmin }: CustomerFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Durum</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select items={statusItems} value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Seçiniz" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.values(CustomerStatus).map((status) => (
-                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                          {statusItems.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -212,15 +229,15 @@ export function CustomerForm({ initialData, isAdmin }: CustomerFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Mülk Tercihi</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select items={propertyTypeItems} value={field.value ?? undefined} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Seçiniz" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.values(PropertyType).map((type) => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          {propertyTypeItems.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

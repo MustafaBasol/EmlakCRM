@@ -2,39 +2,60 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { TaskPriority, TaskStatus } from "@prisma/client";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { TaskStatus, TaskPriority } from "@prisma/client";
+import {
+  taskPriorityLabels,
+  taskStatusLabels,
+} from "@/lib/constants/enum-labels";
 
 export function TaskFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchValue = searchParams.get("search") ?? "";
+  const statusValue = searchParams.get("status") ?? "all";
+  const priorityValue = searchParams.get("priority") ?? "all";
+
+  const statusItems = Object.values(TaskStatus).map((status) => ({
+    value: status,
+    label: taskStatusLabels[status],
+  }));
+
+  const priorityItems = Object.values(TaskPriority).map((priority) => ({
+    value: priority,
+    label: taskPriorityLabels[priority],
+  }));
 
   const handleSearch = (term: string) => {
     const params = new URLSearchParams(searchParams);
+
     if (term) {
       params.set("search", term);
     } else {
       params.delete("search");
     }
+
     router.replace(`${pathname}?${params.toString()}`);
   };
 
   const handleFilterChange = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams);
+
     if (value && value !== "all") {
       params.set(key, value);
     } else {
       params.delete(key);
     }
+
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -49,38 +70,50 @@ export function TaskFilters() {
         <Input
           placeholder="Görevlerde ara..."
           className="pl-9"
-          defaultValue={searchParams.get("search")?.toString()}
-          onChange={(e) => handleSearch(e.target.value)}
+          value={searchValue}
+          onChange={(event) => handleSearch(event.target.value)}
         />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select
-          defaultValue={searchParams.get("status")?.toString() || "all"}
-          onValueChange={(v) => handleFilterChange("status", v)}
+          items={[
+            { value: "all", label: "Durum: Tümü" },
+            ...statusItems,
+          ]}
+          value={statusValue}
+          onValueChange={(value) => handleFilterChange("status", value)}
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Durum: Tümü</SelectItem>
-            {Object.values(TaskStatus).map((status) => (
-              <SelectItem key={status} value={status}>{status}</SelectItem>
+            {statusItems.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         <Select
-          defaultValue={searchParams.get("priority")?.toString() || "all"}
-          onValueChange={(v) => handleFilterChange("priority", v)}
+          items={[
+            { value: "all", label: "Öncelik: Tümü" },
+            ...priorityItems,
+          ]}
+          value={priorityValue}
+          onValueChange={(value) => handleFilterChange("priority", value)}
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Öncelik" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Öncelik: Tümü</SelectItem>
-            {Object.values(TaskPriority).map((priority) => (
-              <SelectItem key={priority} value={priority}>{priority}</SelectItem>
+            {priorityItems.map((priority) => (
+              <SelectItem key={priority.value} value={priority.value}>
+                {priority.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
