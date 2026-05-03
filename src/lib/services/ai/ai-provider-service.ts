@@ -92,7 +92,8 @@ async function generateWithOllama(prompt: string): Promise<AiProviderResult> {
       stream: false,
       format: "json",
       options: {
-        temperature: 0.7,
+        temperature: 0.45,
+        num_predict: 2600,
       },
     }),
   });
