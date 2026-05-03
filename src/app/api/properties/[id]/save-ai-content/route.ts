@@ -29,7 +29,7 @@ export async function POST(request: Request, ctx: RouteParams) {
     const body = await request.json();
     const content = aiGeneratedContentSchema.parse(body.content);
     const provider = typeof body.provider === "string" ? body.provider : process.env.AI_PROVIDER || "gemini";
-    const model = typeof body.model === "string" ? body.model : process.env.AI_MODEL || "gemini-2.5-flash";
+    const model = typeof body.model === "string" ? body.model : process.env.AI_MODEL || "gemma:2b";
     const saved = await saveAiGeneratedContent(id, provider, model, content);
 
     return NextResponse.json({ id: saved.id });

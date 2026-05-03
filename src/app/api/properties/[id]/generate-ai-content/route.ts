@@ -55,15 +55,22 @@ export async function POST(request: Request, ctx: RouteParams) {
     const body = await request.json().catch(() => ({}));
     const shouldSave = body?.save === true;
     const result = await generateRealEstateContent(listing);
-    const saved = shouldSave
-      ? await saveAiGeneratedContent(id, result.provider, result.model, result.content)
-      : null;
+    let savedContentId: string | null = null;
+
+    if (shouldSave) {
+      try {
+        const saved = await saveAiGeneratedContent(id, result.provider, result.model, result.content);
+        savedContentId = saved.id;
+      } catch (saveError) {
+        console.error("AI content generated but could not be saved:", saveError);
+      }
+    }
 
     return NextResponse.json({
       content: result.content,
       provider: result.provider,
       model: result.model,
-      savedContentId: saved?.id ?? null,
+      savedContentId,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI içerik üretilemedi.";

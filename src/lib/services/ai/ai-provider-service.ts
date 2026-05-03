@@ -1,6 +1,7 @@
 import { aiGeneratedContentSchema, type AiProviderResult } from "@/lib/services/ai/ai-content-types";
 
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
+const OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434";
 
 function extractJsonText(text: string) {
   const trimmed = text.trim();
@@ -76,19 +77,64 @@ async function generateWithGemini(prompt: string): Promise<AiProviderResult> {
   };
 }
 
+async function generateWithOllama(prompt: string): Promise<AiProviderResult> {
+  const baseUrl = process.env.OLLAMA_BASE_URL || OLLAMA_DEFAULT_BASE_URL;
+  const model = process.env.AI_MODEL || "gemma:2b";
+
+  const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      prompt,
+      stream: false,
+      format: "json",
+      options: {
+        temperature: 0.7,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error("Ollama content generation failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorBody.slice(0, 500),
+    });
+    throw new Error("Ollama ile AI içerik üretimi başarısız oldu.");
+  }
+
+  const data = await response.json();
+  const rawText = data?.response;
+
+  if (!rawText || typeof rawText !== "string") {
+    throw new Error("Ollama boş cevap döndürdü.");
+  }
+
+  return {
+    content: parseAiContentJson(rawText),
+    rawText,
+    provider: "ollama",
+    model,
+  };
+}
+
 export async function generateAiContent(prompt: string): Promise<AiProviderResult> {
   const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
 
   switch (provider) {
     case "gemini":
       return generateWithGemini(prompt);
+    case "ollama":
+      return generateWithOllama(prompt);
     case "openrouter":
     case "groq":
     case "deepseek":
-    case "ollama":
       throw new Error(`${provider} provider henüz yapılandırılmadı.`);
     default:
       throw new Error(`Desteklenmeyen AI provider: ${provider}`);
   }
 }
-
