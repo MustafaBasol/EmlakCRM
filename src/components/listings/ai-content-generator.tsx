@@ -161,16 +161,17 @@ export function AiContentGenerator({ propertyId, onApplyDescription }: AiContent
 
         {content && (
           <div className="space-y-4">
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onApplyDescription?.(content.longDescription)}
-                disabled={!onApplyDescription}
-              >
-                İlan açıklamasına uygula
-              </Button>
-            </div>
+            {onApplyDescription && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onApplyDescription(content.longDescription)}
+                >
+                  İlan açıklamasına uygula
+                </Button>
+              </div>
+            )}
 
             <div className="grid gap-4 lg:grid-cols-2">
               <ContentBlock

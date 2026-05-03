@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { ListingPhotoGallery } from "@/components/listings/listing-photo-gallery";
+import { AiContentGenerator } from "@/components/listings/ai-content-generator";
 import { listingStatusLabels, propertyTypeLabels } from "@/lib/constants/enum-labels";
 
 interface PageProps {
@@ -111,6 +112,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
               <ListingPhotoGallery photos={listing.photos} title={listing.title} />
             </CardContent>
           </Card>
+
+          <AiContentGenerator propertyId={listing.id} />
         </div>
 
         <div className="space-y-6">
